@@ -1,0 +1,116 @@
+1.create a table-valued function that returns a list of orders including order id, customer id, order status, store id and staff id for the given year range
+
+
+CREATE FUNCTION udfProductInYear
+(
+    @model_year varchar(30)
+)
+RETURNS TABLE
+AS
+RETURN
+ SELECT 
+        order_id,
+        customer_id,
+        store_id,
+		staff_id,
+		order_date,
+		order_status
+    FROM
+        sales.orders
+    WHERE
+        order_date = @model_year;
+
+		SELECT * from
+ udfProductInYear(2018);
+
+ ALTER FUNCTION udfProductInYear
+ (
+ @start_date varchar(30),
+    @end_date varchar(30)
+)
+RETURNS TABLE
+AS
+RETURN
+    SELECT 
+       order_id,
+        customer_id,
+        store_id,
+		staff_id,
+		order_date,
+		order_status
+    FROM
+        sales.orders
+    WHERE
+        order_date BETWEEN @start_date AND @end_date
+
+		SELECT * from
+       udfProductInYear(2016,2017)
+
+
+2.create a table-valued function that returns a list of orders including order id, customer id, order status, store id and staff id for the given year range2. create a trigger that logs all removed records of customers table
+
+create table sales.customer_audit
+( 
+change_id INT IDENTITY PRIMARY KEY,
+    customer_id INT NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+	last_name VARCHAR(255) NOT NULL,
+    phone varchar(20)  NULL,
+	
+	street varchar(20)  NULL,
+	city varchar(20)  NULL,
+	state_name varchar(20)  NULL,
+	zip_code varchar(20)  NULL,
+	updated_at DATETIME NOT NULL,
+    operation CHAR(3) NOT NULL,
+   
+	)
+
+
+create TRIGGER sales_customers_Deleted
+ON sales.customers
+AFTER  DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO sales.customer_audit(
+       customer_id,
+         first_name,
+         last_name,
+        phone,
+	
+        street, 
+		city,
+		zip_code,
+        updated_at, 
+        operation
+    )
+   
+    SELECT
+       d.customer_id,
+         first_name,
+         last_name,
+        phone,
+       
+        street, 
+		city,
+		
+		zip_code,
+        GETDATE(),
+        'DEL'
+    FROM
+        deleted d ;
+END
+
+select * from sales.customers
+
+delete from sales.customers
+where [customer_id]=3;
+
+
+
+SELECT 
+    * 
+FROM 
+    sales.customer_audit;
+
